@@ -2,21 +2,30 @@ from threading import Thread
 import socket
 import time
 import select
+from enum import Enum
 
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtCore import QThread
 
 
+class _Parameters(Enum):
+    PORT = 5005
+    UDP_IP = '127.0.0.1'
+    CONNECTION_MESSAGE_REQUEST = 'connect'
+    CONNECTION_MESSAGE_RESPONSE = 'connect'
+
+
 class UDPServer(QThread):
+
+    signal_message_received = pyqtSignal('QString')
+
     def __init__(self, parent=None):
         QThread.__init__(self, parent)
 
         self._exiting = False
 
         self._sock = None
-        self._port = 5005
-        self._udp_ip = '127.0.0.1'
         self._sleep_time = 0.001
         self._client_address = None
         self._message_id = 1
@@ -37,10 +46,10 @@ class UDPServer(QThread):
         print('init communication')
 
         self._sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self._sock.bind((self._udp_ip, self._port))
+        self._sock.bind((_Parameters.UDP_IP.value, _Parameters.PORT.value))
 
     def run(self):
-        print('start communication thread')
+        self._log('start communication thread')
         self._initial_connection_loop()
         self._do_communication()
 
@@ -49,7 +58,13 @@ class UDPServer(QThread):
             readable, writable, exceptional = select.select([self._sock], [], [])
             if readable:
                 data, self._client_address = self._sock.recvfrom(1024)
-                print(data)
+                decoded_data = data.decode()
+                self._log(decoded_data)
+                if decoded_data == _Parameters.CONNECTION_MESSAGE_REQUEST.value:
+                    self._log('Reconnect from {}'.format(self._client_address))
+                    self._sock.sendto(_Parameters.CONNECTION_MESSAGE_RESPONSE.value.encode(), self._client_address)
+                else:
+                    self.signal_message_received.emit(decoded_data)
 
             time.sleep(self._sleep_time)
 
@@ -60,9 +75,12 @@ class UDPServer(QThread):
 
             data = data.decode()
             self._log("received message: {}".format(data))
-            if data == 'connect':
+            if data == _Parameters.CONNECTION_MESSAGE_REQUEST.value:
                 print('Established communication from {}'.format(self._client_address))
-                self._sock.sendto("connect".encode(), self._client_address)
+                number_of_bytes_sent = self._sock.sendto(_Parameters.CONNECTION_MESSAGE_RESPONSE.value.encode(), self._client_address)
+
+                self._log('number_of_bytes_sent: {}'.format(number_of_bytes_sent))
+
                 self._is_connected = True
             else:
                 print('during initial communication received a non connect message')
