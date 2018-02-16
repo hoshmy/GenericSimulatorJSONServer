@@ -2,7 +2,9 @@ import os
 from enum import Enum
 
 from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QFrame
 from PyQt5.QtWidgets import QLabel
 from PyQt5.QtWidgets import QGridLayout
 from PyQt5.QtWidgets import QPushButton
@@ -16,6 +18,8 @@ from udp_server import UDPServer
 
 class _Parameter(Enum):
     MESSAGES_FOLDER = 'messages'
+    REGULAR_LABEL_MAX_WIDTH = 200
+    REGULAR_LABEL_MAX_HEIGHT = 20
 
 
 class WidgetId(Enum):
@@ -62,6 +66,10 @@ class MainWidget(QWidget):
 
         self._widgets[WidgetId.HEADER.value] = QLabel('Chose a message from list:')
         self._widgets[WidgetId.HEADER.value].setAlignment(QtCore.Qt.AlignLeft)
+        self._widgets[WidgetId.HEADER.value].setMaximumSize(
+                _Parameter.REGULAR_LABEL_MAX_WIDTH.value,
+                _Parameter.REGULAR_LABEL_MAX_HEIGHT.value
+        )
 
         self._widgets[WidgetId.MESSAGES_SELECT_COMBO_BOX.value] = QComboBox()
         self._widgets[WidgetId.MESSAGES_SELECT_COMBO_BOX.value].addItems(self._messages_names)
@@ -75,10 +83,15 @@ class MainWidget(QWidget):
 
         self._widgets[WidgetId.RECEIVED_MESSAGE_HEADER.value] = QLabel('Last received message:')
         self._widgets[WidgetId.RECEIVED_MESSAGE_HEADER.value].setAlignment(QtCore.Qt.AlignLeft)
+        self._widgets[WidgetId.RECEIVED_MESSAGE_HEADER.value].setMaximumSize(
+                _Parameter.REGULAR_LABEL_MAX_WIDTH.value,
+                _Parameter.REGULAR_LABEL_MAX_HEIGHT.value
+        )
 
         self._widgets[WidgetId.RECEIVED_MESSAGE_BODY.value] = QLabel('None')
         self._widgets[WidgetId.RECEIVED_MESSAGE_BODY.value].setMaximumHeight(100)
         self._widgets[WidgetId.RECEIVED_MESSAGE_BODY.value].setMaximumWidth(200)
+        self._set_data_label_style(self._widgets[WidgetId.RECEIVED_MESSAGE_BODY.value])
 
         for i, widget in enumerate(self._widgets):
             grid_layout.addWidget(widget, i, 0)
@@ -97,6 +110,12 @@ class MainWidget(QWidget):
                         self._encoded_messages.append(current_message_encoded)
                         file_name_without_extention = file.split('.')[0]
                         self._messages_names.append(file_name_without_extention)
+
+    def _set_data_label_style(self, label):
+        # label.setAlignment(Qt.AlignLeft | Qt.AlignVTop)
+        label.setAlignment(Qt.AlignLeft)
+        label.setFrameShape(QFrame.Panel)
+        label.setLineWidth(1)
 
     @pyqtSlot(int)
     def _slot_on_message_list_index_changed(self, message_index):
