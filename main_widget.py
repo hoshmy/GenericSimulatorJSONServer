@@ -20,6 +20,7 @@ class _Parameter(Enum):
     MESSAGES_FOLDER = 'messages'
     REGULAR_LABEL_MAX_WIDTH = 200
     REGULAR_LABEL_MAX_HEIGHT = 20
+    GRID_LAYOUT_VERTICAL_SPACING = 1
 
 
 class WidgetId(Enum):
@@ -62,6 +63,7 @@ class MainWidget(QWidget):
 
     def _init_ui(self):
         grid_layout = QGridLayout(self)
+        grid_layout.setVerticalSpacing(_Parameter.GRID_LAYOUT_VERTICAL_SPACING.value)
         self.setLayout(grid_layout)
 
         self._widgets[WidgetId.HEADER.value] = QLabel('Chose a message from list:')

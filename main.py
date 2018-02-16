@@ -10,7 +10,7 @@ from main_widget import MainWidget
 
 
 class _GeneralParameters(Enum):
-    MAIN_WINDOW_HEIGHT = 500
+    MAIN_WINDOW_HEIGHT = 400
     MAIN_WINDOW_WIDTH = 250
     MAIN_WINDOW_HORIZONTAL_OFFSET = 1100
     MAIN_WINDOW_TITLE = 'Drone Simulator'
